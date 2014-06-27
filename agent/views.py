@@ -56,7 +56,7 @@ def register(request):
     name = form.get('name')
     port = form.get('port')
     hostname = form.get('hostname')
-    h, created = Host.objects.get_or_create(name=name)
+    h, created = Host.objects.get_or_create(hostname=hostname)
     if created:
         h.name = name
         h.hostname = hostname
@@ -79,14 +79,17 @@ def containers(request):
         return HttpResponse(status=403)
     container_data = json.loads(request.body)
     for d in container_data:
+        if d.get('HostConfig', {}).get('PortBindings'):
+            print(d)
         c = d.get('Container')
         meta = d.get('Meta')
+        running = meta.get('State', {}).get('Running', False)
         container, created = Container.objects.get_or_create(host=host,
                 container_id=c.get('Id'))
-        if container.description == '' and c.get('Names'):
-            container.description = c.get('Names')[0][1:]
+        if container.description == '' and meta.get('Names'):
+            container.description = meta.get('Names')[0][1:]
         container.meta = json.dumps(meta)
-        container.is_running = meta.get('State', {}).get('Running')
+        container.is_running = running
         container.synced = True
         container.save()
     container_ids = [x.get('Container').get('Id') for x in container_data]

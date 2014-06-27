@@ -36,6 +36,7 @@ class ContainerResource(ModelResource):
     class Meta:
         queryset = Container.objects.all()
         resource_name = 'containers'
+        always_return_data = True
         authorization = Authorization()
         authentication = MultiAuthentication(
             ApiKeyAuthentication(), SessionAuthentication())
@@ -160,6 +161,7 @@ class ContainerResource(ModelResource):
                 timeout = int(bundle.request.GET.get('wait'))
             except Exception, e:
                 timeout = 60
+            ids = []
             for c in containers:
                 # wait for port to be available
                 count = 0
